@@ -6,6 +6,7 @@ import tkinter as tk
 import threading
 import shutil
 import webbrowser
+from updater import Updater, check_update_thread, download_update_thread, install_update_thread
 
 def all2pdf(input_folder, pdfpath, pdfname):
     start_time = time.time()
@@ -273,6 +274,44 @@ QQ群号，B站主页也有，可以直接复制，我懒得做功能了。
     bilibili_label.pack(pady=(0, 10), padx=10)
     bilibili_label.bind("<Button-1>", lambda event: webbrowser.open_new("https://space.bilibili.com/397706571"))
 
+def check_update():
+    updater = Updater()
+    has_update, message = updater.check_for_updates()
+    
+    update_window = ctk.CTkToplevel(root)
+    update_window.title("检查更新")
+    update_window.geometry("500x400")
+    
+    status_label = ctk.CTkLabel(update_window, text=message)
+    status_label.pack(pady=20, padx=10)
+    
+    if has_update:
+        version_label = ctk.CTkLabel(update_window, text=f"发现新版本: {updater.latest_version}", font=("Arial", 14, "bold"))
+        version_label.pack(pady=10, padx=10)
+        
+        changelog_text = ctk.CTkTextbox(update_window, height=150, width=450)
+        changelog_text.insert("0.0", updater.changelog or "暂无更新日志")
+        changelog_text.pack(pady=10, padx=10)
+        
+        def on_update_complete(updater_obj, success, msg):
+            if success:
+                status_label.configure(text=msg)
+                if isinstance(updater_obj, Updater):
+                    def on_install_complete(success, msg):
+                        if success:
+                            restart_btn = ctk.CTkButton(update_window, text="重启程序", command=lambda: updater_obj.restart_application())
+                            restart_btn.pack(pady=10, padx=10)
+                        status_label.configure(text=msg)
+                    install_update_thread(updater_obj, msg, status_label, on_install_complete=on_install_complete)
+            else:
+                status_label.configure(text=msg)
+        
+        download_btn = ctk.CTkButton(update_window, text="下载更新", command=lambda: download_update_thread(updater, status_label, on_download_complete=on_update_complete))
+        download_btn.pack(pady=10, padx=10)
+    else:
+        close_btn = ctk.CTkButton(update_window, text="关闭", command=update_window.destroy)
+        close_btn.pack(pady=10, padx=10)
+
 # 自定义设置：
 # 下载目录已硬编码为程序当前目录，无需加载配置文件
 # load_config = jmcomic.JmOption.from_file(config)
@@ -281,6 +320,18 @@ QQ群号，B站主页也有，可以直接复制，我懒得做功能了。
 root = ctk.CTk()
 root.title("JM下载器")
 root.geometry("400x300")
+
+# 创建顶部框架（用于放置更新按钮）
+top_frame = ctk.CTkFrame(root)
+top_frame.pack(side="top", fill="x", padx=10, pady=5)
+
+# 创建一个检查更新按钮（小巧，放在左上角）
+update_button = ctk.CTkButton(top_frame, text="🔄", width=40, height=30, font=("Arial", 16), command=check_update)
+update_button.pack(side="left", padx=5)
+
+# 创建一个标题标签（放在右上角）
+title_label = ctk.CTkLabel(top_frame, text="JM下载器", font=("Arial", 14, "bold"))
+title_label.pack(side="right", padx=5)
 
 # 创建一个输入框
 entry = ctk.CTkEntry(root, placeholder_text="请输入漫画ID")

@@ -2,3 +2,4 @@ jmcomic
 pyyaml
 Pillow
 customtkinter
+requests
