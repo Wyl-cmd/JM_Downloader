@@ -1,3 +1,5 @@
+
+
 # JM下载器
 
 一个简单易用的漫画下载和PDF转换工具，支持下载漫画并自动转换为PDF格式方便阅读。
@@ -21,8 +23,8 @@
 ### 方法2：从源码运行
 1. 克隆本仓库
 ```bash
-https://github.com/yourusername/JMbenzi.git
-cd JMbenzi
+git clone https://github.com/Wyl-cmd/JM_Downloader.git
+cd JM_Downloader
 ```
 2. 安装依赖
 ```bash
